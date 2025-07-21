@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const app = express();
@@ -5,6 +6,7 @@ const userModel = require("./models/user");
 const postModel = require("./models/post");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const cookieParser = require("cookie-parser");
 
 app.set("view engine", "ejs");
@@ -87,7 +89,7 @@ app.post("/register", async (req, res) => {
         email,
         password: hash,
       });
-      var token = jwt.sign({ email: email, userid: user._id }, "key");
+      var token = jwt.sign({ email: email, userid: user._id }, JWT_SECRET_KEY);
       res.cookie("token", token);
       res.redirect("/login");
     });
@@ -101,7 +103,7 @@ app.post("/login", async (req, res) => {
 
   bcrypt.compare(password, user.password, function (err, result) {
     if (result) {
-      var token = jwt.sign({ email: email, userid: user._id }, "key");
+      var token = jwt.sign({ email: email, userid: user._id }, JWT_SECRET_KEY);
       res.cookie("token", token);
       res.status(200).redirect("/profile");
     } else res.redirect("/login");
@@ -117,7 +119,7 @@ function isLoggedIn(req, res, next) {
   if (req.cookies.token === "") {
     res.send("You Need to Sign in Fam 🥺");
   } else {
-    var data = jwt.verify(req.cookies.token, "key");
+    var data = jwt.verify(req.cookies.token, JWT_SECRET_KEY);
     req.user = data;
   }
   next();
